@@ -59,23 +59,31 @@ typedef struct
 
 error erros_encontrados[10];
 
-const errorCode errosCode[]{
-    {11, "Sistema OK"},
-    {15, "Falha na unidade EFI"},
-    {19, "Sem tensao no pino 26"},
-    {21, "Temperatura da agua fora da faixa"},
-    {22, "Pressao do coletor fora da faixa"},
-    {23, "Posicao da borboleta fora da faixa"},
-    {24, "Temperatura do ar fora da faixa"},
-    {51, "Temperatura agua abaixo da faixa"},
-    {52, "Circuito PSPS aberto"},
-    {53, "Sinal da borboleta acima da faixa"},
-    {54, "Temp. do ar abaixo da faixa"},
-    {61, "Temp. da agua acima da faixa"},
-    {85, "Falha no sistema de canister"},
-    {87, "Falha no circuito da bomba"},
-    {95, "Circuito da bomba aberto; terra"},
-    {96, "Circuito da bomba aberto; bateria"}};
+const errorCode errosCodeKOEO[]{
+        {11, "Sistema OK"},
+        {14, "Falha de pulso"}, 
+        {15, "Falha na unidade EFI"},
+        {18, "Circuito SPOUT da ignição aberto"},
+        {19, "Sem tensão no pino 26"}, 
+        {21, "Temperatura da água fora da faixa"},
+        {22, "Pressão no coletor fora da faixa MAP"},
+        {23, "Posição da borboleta fora da faixa"},
+        {24, "Temperatura do ar fora da faixa"},
+        {25, "Sem KNOCK durante Dyn. Resp."},
+        {29, "Falha no sensor do velocímetro"},
+        {41, "Sonda Lambda não chaveia"},
+        {51, "Temp. água abaixo da faixa"},
+        {52, "Circuito PSPS aberto"},
+        {53, "Sinal da borboleta acima da faixa"}, 
+        {54, "Temp. do ar abaixo da faixa"},
+        {61, "Temp. da água acima da faixa"},
+        {63, "Sinal da borboleta abaixo da faixa"},
+        {64, "Temp. do ar acima da faixa"},
+        {85, "Falha no sistema de canister"}, 
+        {87, "Falha no circuito da bomba"},
+        {95, "Circuito da bomba aberto; terra"}, 
+        {96, "Circuito da bomba aberto; bateria"}
+};
 
 // ========================================================================================================
 // --- Configurações Iniciais ---
@@ -177,6 +185,8 @@ void menu_select()
                         lcd.print("   existentes  ");
                         ler_codigos(1);
 
+                        delay(5000);
+                        
                         lcd.setCursor(1, 0);
                         lcd.print(" Lendo defeitos");
                         lcd.setCursor(0, 1);
