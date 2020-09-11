@@ -59,7 +59,7 @@ typedef struct
 
 error erros_encontrados[10];
 
-const errorCode errosCodeKOEO[]{
+const errorCode errosCode[]{
         {11, "Sistema OK"},
         {14, "Falha de pulso"}, 
         {15, "Falha na unidade EFI"},
@@ -292,23 +292,6 @@ void ler_codigos(int type)
 
 void ver_todos_codigos()
 {
-        lcd.setCursor(1, 0);
-        lcd.print("    Defeitos   ");
-        lcd.setCursor(0, 1);
-        lcd.print("   existentes  ");
-        delay(1000);
-        ver_codigos(1);
-
-        lcd.setCursor(1, 0);
-        lcd.print("    Defeitos   ");
-        lcd.setCursor(0, 1);
-        lcd.print("    Passados   ");
-        delay(1000);
-        ver_codigos(2);
-}
-
-void ver_codigos(int type)
-{
         lcd.setCursor(0, 0);
         lcd.print(contador_erros_encontrados);
         lcd.print(" - Codigo(s)   ");
@@ -316,30 +299,47 @@ void ver_codigos(int type)
         lcd.write("Encontrado(s)  ");
         delay(2000);
         lcd.clear();
+        
+        ver_codigos(1);
+        ver_codigos(2);
+}
 
+void ver_codigos(int type)
+{
         for (int i = 0; i <= contador_erros_encontrados; ++i)
         {
-                if (erros_encontrados[i].type == type)
+                for (uint8_t j = 0; j < sizeof(errosCode) / sizeof(errorCode); ++j)
                 {
-                        for (uint8_t j = 0; j < sizeof(errosCode) / sizeof(errorCode); ++j)
+                        if (erros_encontrados[i].code == errosCode[j].code)
                         {
-                                if (erros_encontrados[i].code == errosCode[j].code)
+                                int caract = errosCode[j].value.length();
+                                lcd.print(errosCode[j].code);
+                                lcd.print(" - ");
+                                lcd.print(errosCode[j].value);
+
+                                lcd.setCursor(1, 1);
+
+                                switch (erros_encontrados[i].type)
                                 {
-                                        int caract = errosCode[j].value.length();
-                                        lcd.print(errosCode[j].code);
-                                        lcd.print(" - ");
-                                        lcd.print(errosCode[j].value);
-                                        delay(1500);
-
-                                        while (caract >= 0)
-                                        {
-                                                lcd.scrollDisplayLeft();
-                                                delay(350);
-                                                caract -= 2;
-                                        }
-
-                                        lcd.clear();
+                                        case 1:
+                                        lcd.write("Presente       ");
+                                        break;
+                                        case 2:
+                                        lcd.write("Passado        ");
+                                        break;
+                                        default:
+                                        break;
                                 }
+                                delay(1500);
+
+                                while (caract >= 0)
+                                {
+                                        lcd.scrollDisplayLeft();
+                                        delay(350);
+                                        caract -= 2;
+                                }
+
+                                lcd.clear();
                         }
                 }
         }
