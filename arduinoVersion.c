@@ -185,7 +185,14 @@ void menu_select()
                         lcd.print("   existentes  ");
                         ler_codigos(1);
 
-                        delay(5000);
+                        boolean codigosPassados = digitalRead(input_carro);
+                        while (!codigoPassado)
+                        {
+                                codigoPassado = true;
+                                delay(200);
+                        }
+
+                        delay(1000);
                         
                         lcd.setCursor(1, 0);
                         lcd.print(" Lendo defeitos");
@@ -350,6 +357,7 @@ void limpar_codigos()
 
         for (int i = 0; i <= contador_maximo_erros; ++i)
         {
-                erros_encontrados[i] = 0;
+                erros_encontrados[i].code = 0;
+                erros_encontrados[i].type = 0;
         }
 }
