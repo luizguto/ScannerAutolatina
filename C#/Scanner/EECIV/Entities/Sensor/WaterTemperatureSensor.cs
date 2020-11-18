@@ -47,7 +47,7 @@ namespace EECIV.Entities.Sensor
                 return 90;
             else if (ECUValue < 0.60 && ECUValue >= 0.55)
                 return 95;
-            else if (ECUValue < 0.55 && ECUValue >= 0.50)
+            else if (ECUValue < 0.55 && ECUValue >= 0.45)
                 return 100;
             else
                 return 0;

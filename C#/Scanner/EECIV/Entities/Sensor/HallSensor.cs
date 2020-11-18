@@ -17,7 +17,10 @@ namespace EECIV.Entities.Sensor
 
         public object ECUValueToSensorValue()
         {
-            throw new NotImplementedException();
+            if (ECUValue == 5.00)
+                return 1;
+            else
+                return 0;
         }
     }
 }
