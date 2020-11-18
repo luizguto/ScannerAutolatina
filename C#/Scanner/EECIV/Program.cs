@@ -1,4 +1,7 @@
 ﻿using EECIV.Entities;
+using EECIV.Entities.Enum;
+using EECIV.Factory;
+using EECIV.Interface;
 using System;
 using System.IO.Ports;
 using System.Threading;
@@ -11,46 +14,33 @@ namespace EECIV
 
         static void Main(string[] args)
         {
+            string port = "COM3";
+            Console.WriteLine("Iniciando comunicação com o Arduino...");
+            Console.WriteLine($"Conectando na porta: { port }");
+            SerialPort serialPort = new SerialPort("COM3", baudRate: 9800, parity: Parity.None, dataBits: 8, stopBits: StopBits.Two);
 
-            ElasticConnection connection = new ElasticConnection();
-
-            /*SerialPort serialPort = new SerialPort("COM3", baudRate: 9800, parity: Parity.None, dataBits: 8, stopBits: StopBits.Two);
-            serialPort.DataReceived += SerialPort_DataReceived;
-            serialPort.ErrorReceived += SerialPort_ErrorReceived;
-            
-            serialPort.Open();
-
-            //Thread.Sleep(1000);
-
-            //WriteByte(7, serialPort);
-            //Thread.Sleep(1000);
-
-
-            //while (string.IsNullOrEmpty(Retorno))
-            //{
-                //Thread.Sleep(1000);
-                //WriteByte(7, serialPort);
-
-            //Thread.Sleep(1000);
-            //Console.WriteLine(serialPort.ReadExisting());
-            //}
-
-            //WriteByte(4, serialPort);
-
-            //WriteByte(5, serialPort);
-
-            //WriteByte(1, serialPort);
-
-
-            while (true)
+            try
             {
-                Thread.Sleep(1000);
 
+                Console.WriteLine("Registrando Handler de recebimento de dados");
+                serialPort.DataReceived += SerialPort_DataReceived;
+
+                Console.WriteLine("Abrindo conexão");
+                serialPort.Open();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Erro ao conectar ao Arduino");
+                throw;
             }
 
+            do
+            {
+                Thread.Sleep(1000);
+            } while (string.IsNullOrEmpty(Console.ReadLine()));
+
+            Console.WriteLine("Fechando conexão");
             serialPort.Close();
-            Console.WriteLine("Hello World!");
-            */
         }
 
         private static void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
@@ -60,11 +50,14 @@ namespace EECIV
 
         private static void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-
             SerialPort sp = (SerialPort)sender;
             string dataReceived = sp.ReadExisting();
 
             var collectedData = Newtonsoft.Json.JsonConvert.DeserializeObject<ArduinoCollect>(dataReceived);
+
+            ISensor sensor = SensorFactory.CreateSensor((SensorType)collectedData.SensorType);
+            ElasticConnection connection = new ElasticConnection();
+            connection.SendData(new CollectedData(sensor));
 
             Console.Write(dataReceived);
         }

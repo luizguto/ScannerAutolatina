@@ -16,17 +16,11 @@ namespace TestScanner
         [Test]
         public void InsertWaterTemperatureSensorCollect()
         {
-            CollectedData data = new CollectedData();
-
             ISensor water = new WaterTemperatureSensor();
-
             water.ECUValue = 1.60F;
             water.Name = "MTE";
 
-            data.SensorType = water.Type;
-            data.Value = water.ECUValueToSensorValue();
-            data.DateTime = System.DateTime.Now;
-
+            CollectedData data = new CollectedData(water);
             var result = new ElasticConnection().SendData(data);
 
             Assert.AreEqual(true, result);
@@ -35,16 +29,11 @@ namespace TestScanner
         [Test]
         public void InsertAirTemperatureSensorCollect()
         {
-            CollectedData data = new CollectedData();
-
             ISensor air = new AirTemperatureSensor();
-
             air.ECUValue = 2.80F;
             air.Name = "MTE";
 
-            data.SensorType = air.Type;
-            data.Value = air.ECUValueToSensorValue();
-            data.DateTime = System.DateTime.Now;
+            CollectedData data = new CollectedData(air);
 
             var result = new ElasticConnection().SendData(data);
 
