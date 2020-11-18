@@ -11,25 +11,18 @@ namespace EECIV
 
         public ElasticConnection()
         {
+        }
 
+
+        public bool SendData(CollectedData data)
+        {
             var settings = new ConnectionSettings(new Uri("http://192.168.0.223:9200")).DefaultIndex("logus");
 
             var client = new ElasticClient(settings);
 
-            var water = new WaterTemperatureSensor
-            {
-                Name = "MTE Numero",
-                ECUValue = 2.91F
-            };
+            IndexResponse indexResponse = client.IndexDocument(data);
 
-            CollectedData collected = new CollectedData();
-
-            collected.Sensor = water;
-            collected.Value = water.ECUValueToSensorValue();
-            collected.DateTime = DateTime.Now;
-
-            var indexResponse = client.IndexDocument(collected);
+            return indexResponse.IsValid;
         }
-
     }
 }

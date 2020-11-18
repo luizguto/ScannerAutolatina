@@ -14,10 +14,6 @@ namespace EECIV.Interface
 
         float ECUValue { get; set; }
 
-        float SensorValue { get; set; }
-
-        DateTime CollectDate { get; set; }
-
         object ECUValueToSensorValue();
 
     }

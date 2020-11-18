@@ -1,5 +1,4 @@
-﻿using EECIV;
-using EECIV.Entities;
+﻿using EECIV.Entities.Sensor;
 using EECIV.Interface;
 using NUnit.Framework;
 

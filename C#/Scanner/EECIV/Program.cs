@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EECIV.Entities;
+using System;
 using System.IO.Ports;
 using System.Threading;
 
@@ -59,10 +60,13 @@ namespace EECIV
 
         private static void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+
             SerialPort sp = (SerialPort)sender;
-            string indata = sp.ReadExisting();
-            Console.WriteLine("Data Received:");
-            Console.Write(indata);
+            string dataReceived = sp.ReadExisting();
+
+            var collectedData = Newtonsoft.Json.JsonConvert.DeserializeObject<ArduinoCollect>(dataReceived);
+
+            Console.Write(dataReceived);
         }
 
         public static void WriteByte(byte data, SerialPort comPort)

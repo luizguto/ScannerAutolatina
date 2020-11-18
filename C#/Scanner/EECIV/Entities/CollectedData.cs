@@ -1,4 +1,5 @@
-﻿using EECIV.Interface;
+﻿using EECIV.Entities.Enum;
+using EECIV.Interface;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +10,7 @@ namespace EECIV.Entities
     {
         public DateTime DateTime { get; set; }
 
-        public ISensor Sensor { get; set; }
+        public SensorType SensorType { get; set; }
 
         public object Value { get; set; }
 
