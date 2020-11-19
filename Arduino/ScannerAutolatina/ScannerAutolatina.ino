@@ -57,23 +57,23 @@ void loop() {
   //else{
         
     DynamicJsonDocument tempAgua(1024);
-    tempAgua["sensor"] = "Sensor Temperatura Agua";
-    tempAgua["valor"] = sensorTemperaturaAgua;
-    tempAgua["tipo"] = "volts";
-
+    tempAgua["SensorType"] = 2;
+    tempAgua["Value"] = sensorTemperaturaAgua;
+    
     //Serial.println(tempAgua);
     serializeJson(tempAgua, Serial);
-    Serial.println();
+    Serial.write("\n");
+    //Serial.println();
     //DynamicJsonDocument tempAr(1024);
-    tempAgua["sensor"] = "Sensor Temperatura Ar";
-    tempAgua["valor"] = sensorTemperaturaAr;
-    tempAgua["tipo"] = "volts";
-
+    tempAgua["SensorType"] = 1;
+    tempAgua["Value"] = sensorTemperaturaAr;
+    
     //Serial.println(tempAr);
     serializeJson(tempAgua, Serial);
-    Serial.println();
+    Serial.write("\n");
+    //Serial.println();
   //}
 
-  delay(10000);
+  delay(2000);
 
 }
