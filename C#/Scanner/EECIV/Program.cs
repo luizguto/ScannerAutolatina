@@ -1,6 +1,7 @@
 ﻿using EECIV.Entities;
 using EECIV.Entities.Enum;
 using EECIV.Factory;
+using EECIV.Inteface;
 using EECIV.Interface;
 using Newtonsoft.Json;
 using System;
@@ -68,8 +69,10 @@ namespace EECIV
                 {
                     ISensor sensor = SensorFactory.CreateSensor((SensorType)collectedData.SensorType);
                     sensor.ECUValue = (float)(double)collectedData.Value;
-                    ElasticConnection connection = new ElasticConnection();
-                    connection.SendData(new CollectedData(sensor));
+                    
+                    IDataAccess connection = DataAccessFactory.Create();
+                    connection.Send(new CollectedData(sensor));
+
                     Console.WriteLine($"Enviando para o Elastic: {sensor.Type.ToString()} - {collectedData.Value}");
                 }
             }

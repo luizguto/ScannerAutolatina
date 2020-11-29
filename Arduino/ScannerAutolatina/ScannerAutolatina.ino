@@ -1,39 +1,42 @@
 #include <ArduinoJson.h>
 
 //Definição das variáveis
-int aLeituraAr = A1;
 int aLeituraAgua = A0;
+int aLeituraAr = A1;
+int aLeituraMAP = A2;
+int aLeituraPosicaoBorboleta = A3;
 
-void setup() {
- 
+void setup(){
+
   Serial.begin(9600); //Inicializa a Serial
-    
+
 }
 
 //Leitura de parametros Ohms
-int lerValorOhms(int numeroPorta)
-{
+int lerValorOhms(int numeroPorta) {
+
   int R1 = 0;
   int R2 = 1000; //Resistencia base 1000 Ohms
   float val = 0;
   float Vout = 0.0;
   int Vin = 5; //Tensao de entrada 5v
-  
-  val = 1.0*analogRead (numeroPorta); //Aquisição analógica de valores pelo pino A0
-  Vout = (val*Vin)/1024;              // Fórmula para calcular o Vout
-  R1 = (R2*(Vin-Vout))/Vout;          //Fòrmula do divisor de tensão
 
-  float tensao = val * (  5.0 / 1024);
+  val = 1.0 * analogRead(numeroPorta); //Aquisição analógica de valores pelo pino A0
+  Vout = (val * Vin) / 1024;           // Fórmula para calcular o Vout
+  R1 = (R2 * (Vin - Vout)) / Vout;     //Fòrmula do divisor de tensão
 
-  if(val<60){
+  float tensao = val * (5.0 / 1024);
+
+  if (val < 60)
+  {
     return 0;
   }
-  
+
   return R1;
 }
 
-float LerValorVolts(int numeroPorta)
-{
+//Realiza a leitura da porta e converte em volts
+float LerValorVolts(int numeroPorta) {
   float Val = 0;
   float Vout = 0.0;
 
@@ -42,38 +45,54 @@ float LerValorVolts(int numeroPorta)
 
   return Vout;
 }
-  
+
+void EnviarJsonSerial(DynamicJsonDocument doc) {
+  serializeJson(doc, Serial);
+  Serial.write("\n");
+}
+
 void loop() {
 
-  float sensorTemperaturaAgua = 0;
-  float sensorTemperaturaAr = 0;
-  sensorTemperaturaAgua = LerValorVolts(aLeituraAgua);
-  sensorTemperaturaAr = LerValorVolts(aLeituraAr);
+  DynamicJsonDocument doc(1024);
 
-  //Se não tiver resistor "Insira resistor"
-  //if(resultado == 0){
-    //Serial.write("Sem dados");
-  //}
-  //else{
-        
-    DynamicJsonDocument tempAgua(1024);
-    tempAgua["SensorType"] = 2;
-    tempAgua["Value"] = sensorTemperaturaAgua;
-    
-    //Serial.println(tempAgua);
-    serializeJson(tempAgua, Serial);
-    Serial.write("\n");
-    //Serial.println();
-    //DynamicJsonDocument tempAr(1024);
-    tempAgua["SensorType"] = 1;
-    tempAgua["Value"] = sensorTemperaturaAr;
-    
-    //Serial.println(tempAr);
-    serializeJson(tempAgua, Serial);
-    Serial.write("\n");
-    //Serial.println();
-  //}
+  //Sensor Ar
+  doc["SensorType"] = 1;
+  doc["Value"] = LerValorVolts(aLeituraAr);
+  serializeJson(doc, Serial);
+  Serial.write("\n");
+  //EnviarJsonSerial(doc);
 
+  //Sensor Agua
+  doc["SensorType"] = 2;
+  doc["Value"] = LerValorVolts(aLeituraAgua);
+  serializeJson(doc, Serial);
+  Serial.write("\n");
+  //EnviarJsonSerial(doc);
+
+  //Sensor Hall
+  /*doc["SensorType"] = 3;
+  doc["Value"] = LerValorVolts(aLeituraAgua);
+  EnviarJsonSerial(doc);*/
+
+  //Sensor Sonda Lambsa
+  /*doc["SensorType"] = 4;
+  doc["Value"] = LerValorVolts(aLeituraAgua);
+  EnviarJsonSerial(doc);*/
+
+  //Sensor MAP
+  doc["SensorType"] = 5;
+  doc["Value"] = LerValorVolts(aLeituraMAP);
+  serializeJson(doc, Serial);
+  Serial.write("\n");
+  //EnviarJsonSerial(doc);
+
+  //Sensor Posição da Borboleta
+  doc["SensorType"] = 7;
+  doc["Value"] = LerValorVolts(aLeituraPosicaoBorboleta);
+  serializeJson(doc, Serial);
+  Serial.write("\n");
+  //EnviarJsonSerial(doc);
+  
   delay(2000);
-
+  
 }
