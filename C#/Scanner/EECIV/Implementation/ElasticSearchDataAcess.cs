@@ -10,8 +10,9 @@ namespace EECIV.Implementation
 {
     public class ElasticSearchDataAcess : IDataAccess
     {
-        private readonly IConfiguration _configuration = null;
+        private readonly IElasticsearchConfiguration _configuration = null;
         private readonly ILogger _logger = null;
+
         private ConnectionSettings connectionSettings = null;
         private ElasticClient elasticClient = null;
 
@@ -19,19 +20,11 @@ namespace EECIV.Implementation
         {
             get
             {
-                return new Uri(_configuration["ServerUri"].ToString());
+                return new Uri(_configuration.ServerUri);
             }
         }
 
-        private string DefaultIndex
-        {
-            get
-            {
-                return _configuration["DefaultIndex"].ToString();
-            }
-        }
-
-        public ElasticSearchDataAcess(IConfiguration configuration, ILogger logger)
+        public ElasticSearchDataAcess(IElasticsearchConfiguration configuration, ILogger logger)
         {
             _configuration = configuration;
             _logger = logger;
@@ -41,7 +34,7 @@ namespace EECIV.Implementation
         {
             try
             {
-                connectionSettings = new ConnectionSettings(ServerUri).DefaultIndex(DefaultIndex);
+                connectionSettings = new ConnectionSettings(ServerUri).DefaultIndex(_configuration.DefaultIndex);
                 elasticClient = new ElasticClient(connectionSettings);
             }
             catch (Exception ex)

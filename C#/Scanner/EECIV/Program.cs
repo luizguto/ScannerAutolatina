@@ -1,12 +1,20 @@
 ﻿using EECIV.Entities;
 using EECIV.Entities.Enum;
 using EECIV.Factory;
+using EECIV.Implementation;
+using EECIV.Implementation.Logger;
 using EECIV.Inteface;
 using EECIV.Interface;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Ports;
 using System.Threading;
 
@@ -15,72 +23,113 @@ namespace EECIV
     class Program
     {
         public static string Retorno = String.Empty;
-        private static ManualResetEvent _disposing = null;
-        private static Thread _threadColeta = null;
-        private static ConcurrentQueue<ArduinoCollect> _filaProcessamento = null;
-        private static List<Thread> _executores = null;
-        private static void Start()
+        private static IConfiguration _configuration = null;
+
+        private static ILoggingBuilder ConfigureLogging(ILoggingBuilder logging)
         {
-            _filaProcessamento = new ConcurrentQueue<ArduinoCollect>();
-            _disposing = new ManualResetEvent(false);
-            _executores = new List<Thread>();
-
-            //_threadColeta = new Thread(() => {
-
-            //    while (!_disposing.WaitOne(3000))
-            //    {
-
-            //    }
-
-            //});
-
-            for (int i = 0; i < 2; i++)
-            {
-                Thread t = new Thread(new ParameterizedThreadStart(SendToElastic));
-                t.Start(i);
-                _executores.Add(t);
-            }
+            return logging.AddProvider(new ColorConsoleLoggerProvider(
+                                     new ColorConsoleLoggerConfiguration
+                                     {
+                                         LogLevel = LogLevel.Error,
+                                         Color = ConsoleColor.Red
+                                     }))
+                             .AddColorConsoleLogger()
+                             .AddColorConsoleLogger(configuration =>
+                             {
+                                 configuration.LogLevel = LogLevel.Warning;
+                                 configuration.Color = ConsoleColor.DarkMagenta;
+                             });
         }
 
-        private static void Stop()
+        private static IConfiguration ConfigureConfiguration()
         {
-            if (_disposing != null)
-            {
-                _disposing.Set();
-            }
+            _configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true)
+                .Build();
 
-            if (_threadColeta != null)
-            {
-                _threadColeta.Join();
-            }
 
-            if (_executores != null)
-            {
-                _executores.ForEach(x => x.Join());
-            }
+            return _configuration;
         }
 
-        private static void SendToElastic(object value)
+        private static void ConfigureServices(IConfiguration configuration, IServiceCollection serviceCollection)
         {
-            while (!_disposing.WaitOne(TimeSpan.FromSeconds(1)))
-            {
-                ArduinoCollect collectedData = new ArduinoCollect();
-                if (_filaProcessamento.TryDequeue(out collectedData))
-                {
-                    ISensor sensor = SensorFactory.CreateSensor((SensorType)collectedData.SensorType);
-                    sensor.ECUValue = (float)(double)collectedData.Value;
-                    
-                    IDataAccess connection = DataAccessFactory.Create();
-                    connection.Send(new CollectedData(sensor));
+            //Realiza a leitura das configurações para uso de porta Serial.
+            ISerialConfiguration serialConfiguration = new SerialConfiguration();
+            configuration.GetSection("SerialConnection").Bind(serialConfiguration);
 
-                    Console.WriteLine($"Enviando para o Elastic: {sensor.Type.ToString()} - {collectedData.Value}");
-                }
-            }
+            IElasticsearchConfiguration elasticConfiguration = new ElasticsearchConfiguration();
+            configuration.GetSection("elasticSearch").Bind(elasticConfiguration);
+
+            IDataAccess _dataAccess = DataAccessFactory.Create(elasticConfiguration, null);
+
+            // DI
+            serviceCollection.AddSingleton<IConfiguration>(configuration);
+            serviceCollection.AddSingleton<ISerialConfiguration>(serialConfiguration);
+            serviceCollection.AddSingleton<IElasticsearchConfiguration>(elasticConfiguration);
+            serviceCollection.AddSingleton<IDataAccess>(_dataAccess);
+            serviceCollection.AddSingleton<IScanner, Scanner>();
+
+            //do the actual work here
+            //var serviceProvider = serviceCollection.BuildServiceProvider();
         }
+
+        //static IHostBuilder CreateHostBuilder(string[] args)
+        //{
+        //    return Host.CreateDefaultBuilder(args)
+        //        .ConfigureAppConfiguration(configuration => ConfigureConfiguration())
+        //    .ConfigureLogging(builder => ConfigureLogging(builder))
+        //    .ConfigureServices(service => ConfigureServices());
+        //}
 
         static void Main(string[] args)
         {
-            string port = "COM3";
+            //IHostBuilder hostBuilder = CreateHostBuilder(args);
+
+            var host = Host.CreateDefaultBuilder()
+            .ConfigureLogging(builder =>
+                builder.ClearProviders()
+                .AddProvider(
+                    new ColorConsoleLoggerProvider(
+                        new ColorConsoleLoggerConfiguration
+                        {
+                            LogLevel = LogLevel.Error,
+                            Color = ConsoleColor.Red
+                        }))
+                .AddColorConsoleLogger()
+                .AddColorConsoleLogger(configuration =>
+                {
+                    configuration.LogLevel = LogLevel.Warning;
+                    configuration.Color = ConsoleColor.DarkMagenta;
+                }))
+             .ConfigureAppConfiguration((context, builder) =>
+             {
+                 // Add other configuration files...
+                 builder.SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", true, true);
+
+             })
+             .ConfigureServices((context, services) =>
+             {
+                 ConfigureServices(context.Configuration, services);
+             })
+             .Build();
+
+            //IHost host = hostBuilder.Build();
+
+            ILogger logger = host.Services.GetService<ILogger>();
+
+
+            IScanner scanner = host.Services.GetService<IScanner>();
+
+
+            scanner.Start();
+
+            Console.ReadLine();
+
+            scanner.Stop();
+
+            /*string port = "COM3";
             Console.WriteLine("Iniciando comunicação com o Arduino...");
             Console.WriteLine($"Conectando na porta: { port }");
             SerialPort serialPort = new SerialPort(port, baudRate: 9800, parity: Parity.None, dataBits: 8, stopBits: StopBits.Two);
@@ -102,15 +151,11 @@ namespace EECIV
                 throw;
             }
 
-            //do
-            //{
-            //    Thread.Sleep(1000);
-            //} while (string.IsNullOrEmpty(Console.ReadLine()));
-
             Console.ReadLine();
             Stop();
             Console.WriteLine("Fechando conexão");
             serialPort.Close();
+            */
         }
 
         private static void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
@@ -137,16 +182,16 @@ namespace EECIV
 
                     //Console.WriteLine($"{sensor.Type.ToString()} - {collectedData.Value}");
 
-                    _filaProcessamento.Enqueue(collectedData);
+                    //_filaProcessamento.Enqueue(collectedData);
                 }
-                
+
             }
             catch
             {
                 Console.WriteLine($"Não foi possível converter o dado recebido. { dataReceived }");
             }
 
-            
+
         }
 
         public static void WriteByte(byte data, SerialPort comPort)
