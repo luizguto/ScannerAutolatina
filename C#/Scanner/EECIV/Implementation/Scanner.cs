@@ -26,16 +26,18 @@ namespace EECIV.Implementation
         private SerialPort _serialPort = null;
 
 
-        public Scanner(IDataAccess dataAccess,  ISerialConfiguration serialConfiguration)
+        public Scanner(IDataAccess dataAccess,  ILogger<Scanner> logger, ISerialConfiguration serialConfiguration)
         {
             _serialConfiguration = serialConfiguration;
-            //_logger = logger;
+            _logger = logger;
             _dataAccess = dataAccess;
         }
         
 
         public void Start()
         {
+            _logger.LogInformation("Inicializando scanner...");
+
             //TODO: Corrigir configurações (Enum)
             _serialPort = new SerialPort(_serialConfiguration.PortName, 
                                          baudRate: _serialConfiguration.BaudRate, 
